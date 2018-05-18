@@ -5,4 +5,5 @@ use_frameworks!
 target 'network-swift' do
     pod 'Alamofire', '~> 4.7'
     pod 'SwiftyJSON', '~> 4.0'
+    pod 'ObjectMapper', '~> 3.1.0'
 end

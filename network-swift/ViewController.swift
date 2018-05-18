@@ -9,36 +9,16 @@
 import UIKit
 import Alamofire
 import SwiftyJSON
+import ObjectMapper
 
-let urlStr = "http://int.dpool.sina.com.cn/iplookup/iplookup.php?format=json"
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        request("", method: .get, parameters: nil, encoding: URLEncoding.default, headers: nil).response { (responseData) in
-            
-        }
         
-        
-        
-        request(urlStr).response { (responseData) in
-            DLog(responseData)
-            if let error = responseData.error {
-                DLog("请求出错")
-            }else{
-                let statusCode = responseData.response?.statusCode
-                if statusCode == 200{
-                    
-                }else{
-                    
-                }
-            }
-            
-            
-            
-        }
-        
+        Http<LocationModel>().url(url: "/svc/books/v3/lists/overview.json").sendRequest()
+
         // Do any additional setup after loading the view, typically from a nib.
     }
 
