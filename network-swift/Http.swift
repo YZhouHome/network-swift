@@ -10,13 +10,20 @@ import Foundation
 import Alamofire
 import SwiftyJSON
 import ObjectMapper
-let baseUrl = "http://api.nytimes.com"
+let baseUrl = "https://api.nytimes.com"
 let key = "39f40589088242f89595aefb1bfce2c6"
 class Http<ModelClass: Mappable> {
+    typealias Succeed = (AnyObject?)->()
+    typealias Failured = (Int, String)->()
+    typealias Errored = (Error)->()
+
     var url: String?
     var params: [String:AnyObject]?
     var requestObj: DataRequest?
-    
+    var succed: Succeed?
+    var failured: Failured?
+    var errored: Errored?
+
     enum Methed: Int {
         case httpGet
         case httpPost
@@ -32,6 +39,21 @@ class Http<ModelClass: Mappable> {
         return self
     }
     
+    func success(s: @escaping Succeed) -> Http {
+        self.succed = s
+        return self
+    }
+    
+    func failure(f: @escaping Failured) -> Http {
+        self.failured = f
+        return self
+    }
+    
+    func error(e: @escaping Errored) -> Http {
+        self.errored = e
+        return self
+    }
+    
     func sendRequest(methed: Methed = .httpGet) -> Http {
         if let requestUrl = url {
             var requestMethod: HTTPMethod = .get
@@ -42,9 +64,12 @@ class Http<ModelClass: Mappable> {
                 params = [:]
             }
             params!["api-key"] = key as AnyObject
-            requestObj = request(requestUrl, method: requestMethod, parameters: params, encoding: URLEncoding.default, headers: nil).response { (responseData) in
+            requestObj = request(requestUrl, method: requestMethod, parameters: params, encoding: URLEncoding.default, headers: nil).response { [weak self] (responseData) in
                 if let error = responseData.error {
                     //请求错误
+                    if self?.errored != nil{
+                        self?.errored!(error)
+                    }
                     DLog(error)
                 }else{
                     let statusCode = responseData.response?.statusCode
@@ -59,16 +84,26 @@ class Http<ModelClass: Mappable> {
                             //成功
                             if jsonStr.first == "{" {
                                 let model = ModelClass(JSONString: jsonStr)
+                                if self?.succed != nil{
+                                    self?.succed!(model as AnyObject)
+                                }
                             }else if jsonStr.first == "[" {
                                 let models = Mapper<ModelClass>().mapArray(JSONString: jsonStr)
+                                if self?.succed != nil{
+                                    self!.succed!(models as AnyObject)
+                                }
                             }else{
                                 
                             }
+                            
                         }else{
-                           //相应数据为空
+                           //数据为空
                         }
                     }else{
                         //其他错误
+                        if self?.failured != nil{
+                            self?.failured!(responseData.response?.statusCode ?? 9999, "error")
+                        }
                     }
                 }
             }

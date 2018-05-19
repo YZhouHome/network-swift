@@ -16,8 +16,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
-        Http<LocationModel>().url(url: "/svc/books/v3/lists/overview.json").sendRequest()
+        Http<LocationModel>().url(url: "/svc/archive/v1/2018/5.json").sendRequest()
 
         // Do any additional setup after loading the view, typically from a nib.
     }
